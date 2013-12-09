@@ -95,6 +95,9 @@ public class FeatureTypeStyleImpl implements org.geotools.styling.FeatureTypeSty
             }
         }
         this.semantics = new LinkedHashSet<SemanticType>(fts.semanticTypeIdentifiers());
+        if(fts instanceof FeatureTypeStyleImpl) {
+            this.transformation = ((FeatureTypeStyleImpl)fts).getTransformation();
+        }
     }
     
     public List<Rule> rules() {
