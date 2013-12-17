@@ -64,7 +64,6 @@ import org.geotools.data.Query;
 import org.geotools.data.crs.ForceCoordinateSystemFeatureResults;
 import org.geotools.data.memory.CollectionSource;
 import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.factory.Hints;
 import org.geotools.feature.FeatureCollection;
@@ -106,10 +105,12 @@ import org.geotools.renderer.crs.ProjectionHandlerFinder;
 import org.geotools.renderer.label.LabelCacheImpl;
 import org.geotools.renderer.label.LabelCacheImpl.LabelRenderingMode;
 import org.geotools.renderer.lite.gridcoverage2d.GridCoverageRenderer;
+import org.geotools.renderer.style.ExpressionExtractor;
 import org.geotools.renderer.style.SLDStyleFactory;
 import org.geotools.renderer.style.Style2D;
 import org.geotools.resources.coverage.FeatureUtilities;
 import org.geotools.resources.image.ImageUtilities;
+import org.geotools.styling.ColorMapEntry;
 import org.geotools.styling.FeatureTypeStyle;
 import org.geotools.styling.PointSymbolizer;
 import org.geotools.styling.RasterSymbolizer;
@@ -135,6 +136,7 @@ import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.expression.Expression;
+import org.opengis.filter.expression.Literal;
 import org.opengis.filter.expression.PropertyName;
 import org.opengis.parameter.GeneralParameterValue;
 import org.opengis.parameter.ParameterValueGroup;
@@ -2646,6 +2648,26 @@ public class StreamingRenderer implements GTRenderer {
             //
             // /////////////////////////////////////////////////////////////////
             if (symbolizer instanceof RasterSymbolizer) {
+                
+                DuplicatingStyleVisitor replaceExpressions = new DuplicatingStyleVisitor() {
+                    @Override
+                    public void visit(ColorMapEntry colorMapEntry) {
+                        super.visit(colorMapEntry);
+                        ColorMapEntry copy =(ColorMapEntry) getCopy();
+                        if(copy.getQuantity() instanceof Literal) {
+                            String expression = copy.getQuantity().evaluate(null, String.class);
+                            Expression newQuantity = ExpressionExtractor.extractCqlExpressions(expression);
+                            if(!(newQuantity instanceof Literal)) {
+                                copy.setQuantity(filterFactory.literal(newQuantity.evaluate(null)));
+                            }
+                            
+                        }
+                        
+                    }
+                };
+                symbolizer.accept(replaceExpressions);
+                symbolizer = (Symbolizer)replaceExpressions.getCopy();
+                
                 // grab the grid coverage
                 GridCoverage2D coverage = null;
                 boolean disposeCoverage = false;
