@@ -63,6 +63,11 @@ import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.MathTransform2D;
 import org.opengis.util.InternationalString;
 import com.vividsolutions.jts.geom.Geometry;
+import it.geosolutions.jaiext.algebra.AlgebraDescriptor;
+import it.geosolutions.jaiext.algebra.AlgebraCRIF;
+import javax.media.jai.OperationRegistry;
+import java.awt.image.renderable.RenderedImageFactory;
+import javax.media.jai.registry.RIFRegistry;
 
 public class AlgebricOp extends OperationJAI {
 
@@ -71,6 +76,17 @@ public class AlgebricOp extends OperationJAI {
      */
     protected static final String RENDERED_MODE = RenderedRegistryMode.MODE_NAME;
 
+    static {
+        try {
+            OperationRegistry or = JAI.getDefaultInstance().getOperationRegistry();
+            or.registerDescriptor(new AlgebraDescriptor());
+            RenderedImageFactory rif = new AlgebraCRIF();
+            RIFRegistry.register(or, "algebric", "it.geosolutions.jaiext.roiaware", rif);
+        } catch (Exception e) {
+            // if already registered (in other cases error will be thrown anyway)
+        }
+    }
+    
     public AlgebricOp() {
         super(getOperationDescriptor("algebric"), new ImagingParameterDescriptors(
                 getOperationDescriptor("algebric"), REPLACED_DESCRIPTORS));

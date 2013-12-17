@@ -112,6 +112,11 @@
 			<artifactId>jt-utils</artifactId>
 			<version>${jt.version}</version>
 		</dependency>
+        <dependency>
+			<groupId>it.geosolutions.jaiext.algebra</groupId>
+			<artifactId>jt-algebra</artifactId>
+			<!-- The version number is specified in the parent POM. -->
+		</dependency>
 
 		<!-- Test dependencies -->
 		<dependency>
